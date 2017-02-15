@@ -1,6 +1,40 @@
+.element-with-border{
+border: 1px solid black;	
+}
+
+.fixed-bottom-mainpage-paginator{
+	bottom:10;
+	margin: 0 auto;
+	
+}
+
+.add-film-button{
+ margin-left: auto;
+  margin-right: 0;
+	right:0;
+	float:right;
+}
+
+.film-description{
+height:215px;	
+}
+
+.film-comments{
+position:absolute;
+bottom:0;	
+}
+
+.film-block{
+position:relative;	
+height:215px;		
+}
+
+.film-preview{
+padding:15px;	
+}
+
 .under-nav-bar-place-holder{
-height: 50px;
-border: 1px solid black;
+height: 70px;
 }
 
 .my-lead{
