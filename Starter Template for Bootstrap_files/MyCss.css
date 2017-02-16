@@ -1,11 +1,14 @@
+.settings-avatar-input{
+	width:196px;		
+}
+
 .element-with-border{
-border: 1px solid black;	
+	border: 1px solid black;	
 }
 
 .fixed-bottom-mainpage-paginator{
 	bottom:10;
-	margin: 0 auto;
-	
+	margin: 0 auto;	
 }
 
 .add-film-button{
@@ -62,10 +65,6 @@ clear:both;
 margin-top:20px; 
 margin-bottom:40px;	
 }
-.settings-avatar-input{
-margin-top:15px; 
-width:200px;		
-}
 .btn-register{
 margin-top:20px;
 }
@@ -109,6 +108,7 @@ margin-bottom:40px;
 font-size:15pt;	
 }
 .divider{
+	height:15px;
 clear:both;	
 }
 .log-in-label-column{
