@@ -4,9 +4,11 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-	<title>authorisation</title>
-	<link href="./Starter Template for Bootstrap_files/bootstrap.min.css" rel="stylesheet">
-	<link href="./Starter Template for Bootstrap_files/MyCss.css" rel="stylesheet" >
+	<title>main page</title>
+    {% load staticfiles %}
+    <link href="{% static "css/bootstrap.min.css" %}" rel="stylesheet">
+    {% load staticfiles %}
+    <link href="{% static "css/MyCss.css" %}" rel="stylesheet">
 </head>
 <body>
  <!-- судя по всему, навигационный бар прилепляется в верху окна и, как следствие, места не занимает-->
@@ -14,83 +16,64 @@
         <div class="container"> <!-- тоже класс бутстрапа, нужен чтобы кнопки и логотип не липли к краям-->
             <a class="navbar-brand" href="#"> <p> To the main page  </p> </a> <!-- класс со шрифтом, размером и цветом подписи-->
             <div id="navbar" class="navbar-collapse collapse">
-              <div class="navbar-form navbar-right"> <!-- --> 	
+              <div class="navbar-form navbar-right"> <!-- -->
                 <button type="submit" class="btn btn-success">Log in</button>
                 <button type="submit" class="btn btn-info">Registration</button>
               </div>
             </div>
         </div>
     </nav>
-    
-    <div class="container under-nav-bar-place-holder"></div>
-    
-    <div class="col-md-9"> <!-- столбец с фильмами -->
-		<p class="my-lead">Authorisation</p>
-		<div class="col-md-4"> 
-			<div>
-				<label class="my-label"> E-mail</label>
-			</div>
-		</div>
-		<div class="col-md-8">	  
-			<div class="input-group">
-				<input type="text" class="form-control" placeholder="example@mail.ru" aria-describedby="basic-addon1">
-			</div>
-		</div>
-		
-		<div class="divider"> </div>
 
-		<div class="col-md-4"> 
-	    	<div>
-	     		<label class="my-label"> Password</label>
-	    	</div>
-	    </div>
-		<div class="col-md-8">	  
-			<div class="input-group">
-				<input type="password" class="form-control" placeholder="qwerty123" aria-describedby="basic-addon1">
-			</div>
-			<button type="submit" class="btn btn-lg btn-success btn-register">Authorise!</button>  	   
-		</div>
-		
-    </div><!--конец левого столбца с формой авторизации-->
-    
+    <div class="container under-nav-bar-place-holder"></div>
+
+
+    <!-- потом надо не забыть выкинуть из цсс все ненужно - там куча мусора-->
+    <div class="col-md-9"> <!-- левый столбец на странице, под всякое разное - фильмы, регистрации авторизации и прочая -->
+
+        {% block content %} {% endblock %}
+
+    </div><!--конец левого столбца-->
+
     <div class ="col-md-3"> <!-- столбец под всякое другое - например, под последние 5 комментариев -->
         <h2>Last comments</h2> <!--ну или не 5-->
 
         <div class="thumbnail">
              <a>
-                 <h3>Commented film title</h3>       
+                 <h3>Commented film title</h3>
                  <h4>Part of comment...</h4>
             </a>
         </div>
 
         <div class="thumbnail">
              <a>
-                 <h3>Commented film title</h3>       
+                 <h3>Commented film title</h3>
                  <h4>Part of comment...</h4>
             </a>
         </div>
 
         <div class="thumbnail">
              <a>
-                 <h3>Commented film title</h3>       
+                 <h3>Commented film title</h3>
                  <h4>Part of comment...</h4>
             </a>
         </div>
 
         <div class="thumbnail">
              <a>
-                 <h3>Commented film title</h3>       
+                 <h3>Commented film title</h3>
                  <h4>Part of comment...</h4>
             </a>
         </div>
 
-        
-        
+
+
     </div>
-    
-    
+
+
     <!-- Bootstrap core JavaScript
     ================================================== -->
-    <script src="./Starter Template for Bootstrap_files/jquery.min.js"></script>
-    <script src="./Starter Template for Bootstrap_files/bootstrap.min.js"></script>
+    {% load staticfiles %}
+    <script src="{% static "js/jquery.min.js" %}"></script>
+    {% load staticfiles %}
+    <script src="{% static "js/bootstrap.min.js" %}"></script>
 </body>
