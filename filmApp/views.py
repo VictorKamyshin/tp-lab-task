@@ -1,18 +1,29 @@
 from django.shortcuts import render
 from django.http import HttpResponse
-from models import Film
+from models import Film, Appraisal, Profile, Comment
 from datetime import datetime
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 # Create your views here.
 
 
-def index(request):
-    return HttpResponse("Hello, world. You're at the filmApp index.")
+def test(request):
+    response = "appraisals of user1 : "
+    film = Film.objects.get(title='AWESOME FILM TITLE')
+    profile = Profile.objects.get(name='user1')
+    tmp = Appraisal.myManager.user_appraisal_distribution(profile.id)
+    for dist in tmp:
+        response += (str(dist.get('value'))+' '+str(dist.get('count'))+' ')
+
+    parent_comment = Comment.customManager.get(id=5)
+
+    Comment.customManager.create_comment('Yp! Really awesome!', profile,parent_comment,film)
+    return HttpResponse(response)
 
 
 def main_page(request):
     films = generate_films(2)
-    return render(request, 'main-page.html', {'films':films})
+    last_comments = generate_last_comments()
+    return render(request, 'main-page.html', {'films':films, 'last_comments':last_comments})
 
 
 def film_card_page(request):
@@ -29,19 +40,30 @@ def film_card_page(request):
                                     u'libero vitae vestibulum. Nunc et maximus est. Nulla facilisi. ',
                  'producer' : u'Awesome producer', 'country':u'USA', 'premiere':datetime.now}
     comments = generate_comment(4)
-    return render(request, 'film-card.html',{'film_card': film_card, 'comments':comments})
+    last_comments = generate_last_comments()
+    return render(request, 'film-card.html', {'film_card': film_card, 'comments':comments, 'last_comments':last_comments})
 
 
 def registration_page(request):
-    return render(request, 'registration.html')
+    last_comments = generate_last_comments()
+    return render(request, 'registration.html', {'last_comments':last_comments})
 
 
 def authorisation_page(request):
-    return render(request, 'authorisation.html')
+    last_comments = generate_last_comments()
+    return render(request, 'authorisation.html', {'last_comments':last_comments})
+
 
 def create_edit_film_page(request):
-    return render(request, 'create-edit-film.html')
+    last_comments = generate_last_comments()
+    return render(request, 'create-edit-film.html', {'last_comments':last_comments})
 
+
+def generate_last_comments():
+    comments = []
+    for i in xrange(0,4):
+        comments.append({'film_title':u'Commented film title' + str(i),'text_part':u'Part of comment...'})
+    return comments
 
 
 def generate_comment(count):

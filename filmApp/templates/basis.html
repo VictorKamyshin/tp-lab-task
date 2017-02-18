@@ -36,37 +36,14 @@
 
     <div class ="col-md-3"> <!-- столбец под всякое другое - например, под последние 5 комментариев -->
         <h2>Last comments</h2> <!--ну или не 5-->
-
+{% for comment in last_comments %}
         <div class="thumbnail">
              <a>
-                 <h3>Commented film title</h3>
-                 <h4>Part of comment...</h4>
+                 <h3>{{comment.film_title}}</h3>
+                 <h4>{{comment.text_part}}</h4>
             </a>
         </div>
-
-        <div class="thumbnail">
-             <a>
-                 <h3>Commented film title</h3>
-                 <h4>Part of comment...</h4>
-            </a>
-        </div>
-
-        <div class="thumbnail">
-             <a>
-                 <h3>Commented film title</h3>
-                 <h4>Part of comment...</h4>
-            </a>
-        </div>
-
-        <div class="thumbnail">
-             <a>
-                 <h3>Commented film title</h3>
-                 <h4>Part of comment...</h4>
-            </a>
-        </div>
-
-
-
+{%  endfor %}
     </div>
 
 

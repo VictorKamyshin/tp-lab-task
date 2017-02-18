@@ -19,9 +19,10 @@ from filmApp import views
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
-    url(r'^film_card/', views.film_card_page, name="film_card"),
-    url(r'^registration/', views.registration_page, name="registration"),
-    url(r'^authorisation/', views.authorisation_page, name="authorisation"),
-    url(r'^film_edit/', views.create_edit_film_page, name="edit_film"),
-    url(r'^main$', views.main_page, name='main_page'),
+    url(r'^film_card/.*', views.film_card_page, name="film_card"),
+    url(r'^registration/.*', views.registration_page, name="registration"),
+    url(r'^authorisation/.*', views.authorisation_page, name="authorisation"),
+    url(r'^film_edit/.*', views.create_edit_film_page, name="edit_film"),
+    url(r'^main/.*$', views.main_page, name='main_page'),
+    url(r'^test/.*$', views.test, name='test'),
 ]
