@@ -9,21 +9,34 @@
     <link href="{% static "css/bootstrap.min.css" %}" rel="stylesheet">
     {% load staticfiles %}
     <link href="{% static "css/MyCss.css" %}" rel="stylesheet">
+    {% block head_historgram %} {% endblock %}
 </head>
 <body>
  <!-- судя по всему, навигационный бар прилепляется в верху окна и, как следствие, места не занимает-->
+
     <nav class="navbar navbar-inverse navbar-fixed-top"> <!-- классы бутстрапа для закрепленного наверху меню, навбар, сделать его черным, закрепить сверху--->
         <div class="container"> <!-- тоже класс бутстрапа, нужен чтобы кнопки и логотип не липли к краям-->
-            <a class="navbar-brand" href="#"> <p> To the main page  </p> </a> <!-- класс со шрифтом, размером и цветом подписи-->
+            <a class="navbar-brand" href="{% url 'main_page' %}"> <p> To the main page  </p> </a> <!-- класс со шрифтом, размером и цветом подписи-->
             <div id="navbar" class="navbar-collapse collapse">
-              <div class="navbar-form navbar-right"> <!-- -->
-                <button type="submit" class="btn btn-success">Log in</button>
-                <button type="submit" class="btn btn-info">Registration</button>
-              </div>
+                {% if username %}
+                    <span class="navbar-brand navbar-right">Welcome, {{username}} </span>
+                    <form class="navbar-form navbar-right" action = "{% url 'user_logout' %}" >
+                        <button type="submit" class="btn btn-danger">Log out</button>
+                    </form>
+                    <form class="navbar-form navbar-right" action = "{% url 'profile' %}" >
+                        <button type="submit" class="btn btn-info">Profile</button>
+                    </form>
+                {% else %}
+                  <form class="navbar-form navbar-right" action = "{% url 'authorisation' %}" >
+                      <button type="submit" class="btn btn-success">Log in</button>
+                  </form>
+                  <form class="navbar-form navbar-right"  action = "{% url 'registration' %}" >
+                      <button type="submit" class="btn btn-info">Registration</button>
+                  </form>
+                {%endif%}
             </div>
         </div>
     </nav>
-
     <div class="container under-nav-bar-place-holder"></div>
 
 
@@ -38,7 +51,7 @@
         <h2>Last comments</h2> <!--ну или не 5-->
 {% for comment in last_comments %}
         <div class="thumbnail">
-             <a>
+             <a href="{% url 'film_card'%}?film_id={{comment.film_id}}">
                  <h3>{{comment.film_title}}</h3>
                  <h4>{{comment.text_part}}</h4>
             </a>
@@ -53,4 +66,7 @@
     <script src="{% static "js/jquery.min.js" %}"></script>
     {% load staticfiles %}
     <script src="{% static "js/bootstrap.min.js" %}"></script>
+
+{% block scripts %}
+{% endblock %}
 </body>

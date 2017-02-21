@@ -12,15 +12,17 @@
                  <span class="caret"></span>
              </button>
              <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
-                 <li><a href="#">Title</a></li>
-                 <li><a href="#">Rating</a></li>
-                 <li><a href="#">Popularity</a></li>
-                 <li><a href="#">Date</a></li> <!-- заметим в скобках, что логичнее было бы сортировать фильмы по дате выхода, а не по дате добавления-->
+                 <li><a href="?sort=title">Title</a></li>
+                 <li><a href="?sort=rating">Rating</a></li>
+                 <li><a href="?sort=popularity">Popularity</a></li>
+                 <li><a href="?sort=date">Date</a></li> <!-- заметим в скобках, что логичнее было бы сортировать фильмы по дате выхода, а не по дате добавления-->
              </ul>
         </div>
     </div>
     <div class="col-md-8">
-        <button type="submit" class="btn btn-success add-film-button">+ Add film</button>
+        <a href="{% url 'create_edit_film'%}">
+            <button type="submit" class="btn btn-success add-film-button">+ Add film</button>
+        </a>
     </div> <!-- конец шапки столбца с фильмами-->
     {% for film in films %}
     <div class="col-sm-12 col-md-12"> <!--странная конструкция, но смотрится неплохо-->
@@ -41,13 +43,13 @@
             </div> <!---левая часть блока с фильмом - с картинкой и рейтингом-->
             <div class = "col-sm-8 col-md-9 film-description">
                 <div>
-                    <h3>{{film.title}}</h3>
+                    <a href="{% url 'film_card'%}?film_id={{film.id}}"><h3>{{film.title}}</h3></a>
                 </div>
                 <div>
                     <h4>{{film.description}}</h4>
                 </div>
                 <div class="film-comments fixed-bottom">
-                    <a><h5>comments({{film.count_of_comments}})</h5></a>
+                    <a href="{% url 'film_card'%}?film_id={{film.id}}"><h5>comments({{film.count_of_comments}})</h5></a>
                 </div>
             </div><!--правая часть блока с фильмом, с названием, описанием и количеством комментов-->
         </div>
@@ -60,19 +62,17 @@
             <nav>
                 <ul class="pagination pagination-sm">
                     <li>
-                        <a href="#" aria-label="Previous">
-                            <span aria-hidden="true">&laquo;</span>
-                        </a>
+                        {% if films.has_previous %}
+                            <a href="?page={{ films.previous_page_number }}"><span aria-hidden="true">&laquo;</span></a>
+                        {% endif %}
                     </li>
-                    <li><a href="#">1</a></li>
-                    <li><a href="#">2</a></li>
-                    <li><a href="#">3</a></li>
-                    <li><a href="#">4</a></li>
-                    <li><a href="#">5</a></li>
                     <li>
-                        <a href="#" aria-label="Next">
-                            <span aria-hidden="true">&raquo;</span>
-                        </a>
+                        <a href="#"><span class="current">{{ films.number }}</span></a>
+                    </li>
+                    <li>
+                        {% if films.has_next %}
+                            <a href="?page={{ films.next_page_number }}"><span aria-hidden="true">&raquo;</span></a>
+                        {% endif %}
                     </li>
                 </ul>
             </nav>

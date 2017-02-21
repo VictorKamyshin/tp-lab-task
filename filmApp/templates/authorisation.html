@@ -1,30 +1,30 @@
 <!DOCTYPE html>
 {% extends "basis.html" %}
 {% block content %}
-		<p class="my-lead">Authorisation</p>
-		<div class="col-md-4"> 
-			<div>
-				<label class="my-label"> E-mail</label>
-			</div>
+	<p class="my-lead">Registration</p>
+<form action="{% url 'authorisation'%}" method="POST">
+{% csrf_token %}
+{% for field in form %}
+	<div class="col-md-4">
+		<div>
+			<label class="my-label"> {{field.label}}</label>
 		</div>
-		<div class="col-md-8">	  
-			<div class="input-group">
-				<input type="text" class="form-control" placeholder="example@mail.ru" aria-describedby="basic-addon1">
-			</div>
+	</div>
+	<div class="col-md-4">
+		<div class="input-group">
+            {{field}}
 		</div>
-		
-		<div class="divider"> </div>
-
-		<div class="col-md-4"> 
-	    	<div>
-	     		<label class="my-label"> Password</label>
-	    	</div>
-	    </div>
-		<div class="col-md-8">	  
-			<div class="input-group">
-				<input type="password" class="form-control" placeholder="qwerty123" aria-describedby="basic-addon1">
-			</div>
-			<button type="submit" class="btn btn-lg btn-success btn-register">Authorise!</button>  	   
-		</div>
-		
+	</div>
+    <div class="col-md-4">
+        <div>
+            <label> {{ field.errors }}</label>
+        </div>
+    </div>
+	<div class="divider"> </div>
+{% endfor %}
+<div class="col-md-4"></div>
+<div class="col-md-8">
+		<button type="submit" class="btn btn-lg btn-success btn-register">Authorise!</button>
+</div>
+</form>
 {% endblock %}

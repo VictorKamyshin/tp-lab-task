@@ -19,10 +19,17 @@ from filmApp import views
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
-    url(r'^film_card/.*', views.film_card_page, name="film_card"),
-    url(r'^registration/.*', views.registration_page, name="registration"),
-    url(r'^authorisation/.*', views.authorisation_page, name="authorisation"),
-    url(r'^film_edit/.*', views.create_edit_film_page, name="edit_film"),
+    url(r'^film_card/.*', views.film_card_page, name='film_card'),
+    url(r'^registration/.*', views.registration_page, name='registration'),
+    url(r'^authorisation/.*', views.authorisation_page, name='authorisation'),
+    url(r'^create_film_card/.*', views.create_edit_film, name='create_edit_film'),
     url(r'^main/.*$', views.main_page, name='main_page'),
+    url(r'^profile/.*$', views.profile_page, name='profile'),
     url(r'^test/.*$', views.test, name='test'),
+    url(r'^logout/.*$',views.user_logout, name='user_logout'),
+    url(r'^api/film_list/.*$', views.api_film_list, name='api_film_list'),
+    url(r'^api/film_card/.*$', views.api_film_card, name='api_film_card'),
+    url(r'^appraisal/.*$', views.film_card_appraisal, name='appraisal'),
+    url(r'^film_comment/.*$', views.film_comment, name='appraisal'),
+
 ]

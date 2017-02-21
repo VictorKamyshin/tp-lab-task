@@ -2,100 +2,28 @@
 {% extends "basis.html" %}
 {% block content %}
 		<p class="my-lead">Edit film information</p>
-		<div class="col-md-4"> 
-			<div>
-				<label class="my-label"> Title</label>
-			</div>
+<form action="{% url 'create_edit_film'%}" method="POST">
+{% csrf_token %}
+{% for field in form %}
+	<div class="col-md-4">
+		<div>
+			<label class="my-label"> {{field.label}}</label>
 		</div>
-		<div class="col-md-8">	  
-			<div class="input-group">
-				<input type="text" class="form-control" placeholder="Awesome film" aria-describedby="basic-addon1">
-			</div>
+	</div>
+	<div class="col-md-4">
+		<div class="input-group">
+            {{field}}
 		</div>
-		
-		<div class="divider"> </div>
-
-		<div class="col-md-4"> 
-	    	<div>
-	     		<label class="my-label"> Producer</label>
-	    	</div>
-	    </div>
-		<div class="col-md-8">	  
-			<div class="input-group">
-				<input type="text" class="form-control" placeholder="Awesome producer" aria-describedby="basic-addon1">
-			</div>
-		</div>
-		
-		<div class="divider"> </div>
-
-		<div class="col-md-4"> 
-	    	<div>
-	     		<label class="my-label"> Country</label>
-	    	</div>
-	    </div>
-		<div class="col-md-8">	  
-			<div class="input-group">
-				<input type="text" class="form-control" placeholder="Awesome country" aria-describedby="basic-addon1">
-			</div>
-		</div>
-		
-		<div class="divider"> </div>
-
-		<div class="col-md-4"> 
-	    	<div>
-	     		<label class="my-label"> Description</label>
-	    	</div>
-	    </div>
-		<div class="col-md-8">	  
-			<div class="input-group">
-				<div class="col-md-12">
-					<div class="input-group comment-wrapper">
-						<textarea id="comment" name="comment" placeholder="Enter film description here" class="comment-iput-field" rows = "4" ></textarea>
-					</div>					 		 
-				</div>
-
-			</div>
-		</div>
-		
-		<div class="divider"> </div>
-
-		<div class="col-md-4"> 
-	    	<div>
-	     		<label class="my-label"> Premiere</label>
-	    	</div> 
-	    </div>
-		<div class="col-md-8">	  
-			<div class="input-group">
-				<input type="date" class="form-control"  aria-describedby="basic-addon1">
-			</div>
-		</div>
-		
-		<div class="divider"> </div>
-		
-		<div class="col-md-4"> 
-	        <label class="my-label">Upload film poster</label>
-	    </div>
-        <div class="col-md-8">	  
-	        <div class="input-group settings-avatar-input">
-            	<input type="text" class="form-control" placeholder="300*400">
-				<span class="input-group-btn">
-					<button class="btn btn-default" type="button">Browse!</button>
-				</span> <!--я не знаю, как заставить кнопку не растягивать поле ввода по нормальному-->
-          	</div><!-- /input-group -->
-	    </div>
-
-		<div class="divider"> </div>
-		
-		<div class="col-md-4"> 
-	        <label class="my-label">Upload preview image</label>
-	    </div>
-        <div class="col-md-8">	  
-	        <div class="input-group settings-avatar-input">
-            	<input type="text" class="form-control" placeholder="120*120">
-				<span class="input-group-btn">
-					<button class="btn btn-default" type="button">Browse!</button>
-				</span> <!--я не знаю, как заставить кнопку не растягивать поле ввода по нормальному-->
-          	</div><!-- /input-group -->
-		 	<button type="submit" class="btn btn-lg btn-success btn-register">Register!</button>  	   
-	    </div>
+	</div>
+    <div class="col-md-4">
+        <div>
+            <label>{{field.errors}}</label>
+        </div>
+    </div>
+	<div class="divider"> </div>
+{% endfor %}
+<div class="col-md-4"></div>
+<div class=""col-md-8>
+		 	<button type="submit" class="btn btn-lg btn-success btn-register">Register!</button>
+</div>
 {% endblock %}

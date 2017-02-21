@@ -2,94 +2,26 @@
 {% extends "basis.html" %}
 {% block content %}
 	<p class="my-lead">Registration</p>
+<form action="{% url 'registration'%}" method="POST">
+{% csrf_token %}
+{% for field in form %}
 	<div class="col-md-4">
 		<div>
-			<label class="my-label"> E-mail</label>
+			<label class="my-label"> {{field.label}}</label>
 		</div>
 	</div>
-	<div class="col-md-8">
-		<div class="input-group">
-			<input type="text" class="form-control" placeholder="example@mail.ru" aria-describedby="basic-addon1">
-		</div>
-	</div>
-
-	<div class="divider"> </div>
-
 	<div class="col-md-4">
-		<div>
-			<label class="my-label"> First name</label>
-		</div>
-	</div>
-	<div class="col-md-8">
 		<div class="input-group">
-			<input type="text" class="form-control" placeholder="Alex" aria-describedby="basic-addon1">
+            {{field}}
 		</div>
 	</div>
-
+    <div class="col-md-4">
+        <div>
+            <label>{{field.errors}}</label>
+        </div>
+    </div>
 	<div class="divider"> </div>
-
-	<div class="col-md-4">
-		<div>
-			<label class="my-label"> Surname</label>
-		</div>
-	</div>
-	<div class="col-md-8">
-		<div class="input-group">
-			<input type="text" class="form-control" placeholder="Smith" aria-describedby="basic-addon1">
-		</div>
-	</div>
-
-	<div class="divider"> </div>
-
-	<div class="col-md-4">
-		<div>
-			<label class="my-label"> Patronymic</label>
-		</div> <!--Отчество?? Ну ладно, за что купил, за то продал-->
-	</div>
-	<div class="col-md-8">
-		<div class="input-group">
-			<input type="text" class="form-control" placeholder="¯\_(ツ)_/¯" aria-describedby="basic-addon1">
-		</div>
-	</div>
-
-	<div class="divider"> </div>
-
-	<div class="col-md-4">
-		<div>
-			<label class="my-label"> Password</label>
-		</div>
-	</div>
-	<div class="col-md-8">
-		<div class="input-group">
-			<input type="password" class="form-control" placeholder="qwerty123" aria-describedby="basic-addon1">
-		</div>
-	</div>
-
-	<div class="divider"> </div>
-
-	<div class="col-md-4">
-		<div>
-			<label class="my-label">Repeat password</label>
-		</div>
-	</div>
-	<div class="col-md-8">
-		<div class="input-group">
-			<input type="password" class="form-control" placeholder="qwerty123" aria-describedby="basic-addon1">
-		</div>
-	</div>
-
-	<div class="divider"> </div>
-
-	<div class="col-md-4">
-		<label class="my-label">Upload avatar</label>
-	</div><!--не обязательно, но очень хочется-->
-	<div class="col-md-8">
-		<div class="input-group settings-avatar-input">
-			<input type="text" class="form-control" placeholder="c:\avatar.jpg">
-			<span class="input-group-btn">
-				<button class="btn btn-default" type="button">Browse!</button>
-			</span> <!--я не знаю, как заставить кнопку не растягивать поле ввода по нормальному-->
-		</div><!-- /input-group -->
+{% endfor %}
 		<button type="submit" class="btn btn-lg btn-success btn-register">Register!</button>
-	</div>
+</form>
 {% endblock %}
