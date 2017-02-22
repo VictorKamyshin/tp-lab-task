@@ -14,13 +14,6 @@ function answer() { //огромная такая джава-скриптови�
             var btn = document.getElementsByName('film_root_comment_add')[0]
             btn.style.display="block";
         }
-        var previous_form = document.getElementsByName('form_clone')
-        console.log("Попытались получить уже существующую форму");
-        if(previous_form.length!=0){
-            previous_form = previous_form[0]
-            var previous_form_parent_elem = document.getElementsByName(previous_form.getAttribute('parent_elem_name'))[0]
-            previous_form_parent_elem.removeChild(previous_form)
-        }
         var form = comment_input_form;
         var form_clone = form.cloneNode(true);
         form_clone.setAttribute('name', 'form_clone');
@@ -80,6 +73,15 @@ function send_comment() {
                 }
 
             });
+
+        var previous_form = document.getElementsByName('form_clone')
+        console.log("Попытались получить уже существующую форму");
+        if(previous_form.length!=0){
+            previous_form = previous_form[0]
+            var previous_form_parent_elem = document.getElementsByName(previous_form.getAttribute('parent_elem_name'))[0]
+            previous_form_parent_elem.removeChild(previous_form)
+        }
+
  }
 
 function insertAfter(newElement,targetElement) {

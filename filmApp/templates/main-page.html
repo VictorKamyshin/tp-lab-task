@@ -8,14 +8,14 @@
     <div class="col-md-2">
          <div class="dropdown btn-group">
              <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                 Default <!-- эта надпись должна будет меняться в зависимости от выбора юзера-->
+                 {{sort}}
                  <span class="caret"></span>
              </button>
              <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
                  <li><a href="?sort=title">Title</a></li>
                  <li><a href="?sort=rating">Rating</a></li>
                  <li><a href="?sort=popularity">Popularity</a></li>
-                 <li><a href="?sort=date">Date</a></li> <!-- заметим в скобках, что логичнее было бы сортировать фильмы по дате выхода, а не по дате добавления-->
+                 <li><a href="?sort=date">Date</a></li>
              </ul>
         </div>
     </div>

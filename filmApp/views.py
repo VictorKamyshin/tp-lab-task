@@ -26,6 +26,12 @@ def test(request):
             film.rating = rating.get('value__avg')
         print film.rating
         film.save()
+    comments = Comment.customManager.all()
+    for comment in comments :
+        if comment.date is None:
+            comment.date = datetime.now()
+            print comment.text
+            comment.save()
     return HttpResponse(response)
 
 
@@ -102,7 +108,8 @@ def main_page(request):
         films = paginate(films, request)
         last_comments = Comment.customManager.get_last()
         user = request.user.username
-        return render(request, 'main-page.html', {'films': films, 'last_comments': last_comments, 'username': user})
+        return render(request, 'main-page.html', {'films': films, 'last_comments': last_comments, 'username': user,
+                                                  'sort': sort})
     else:
         return HttpResponse('Method does not allowed')
 
@@ -234,11 +241,12 @@ def film_comment(request):
         print type(comment_id)
         if comment_id is not None:
             if comment_id.isdigit():
-                parent_comment = Comment.customManager.get(id = comment_id)
+                parent_comment = Comment.customManager.get(id=comment_id)
             else:
                 return HttpResponseBadRequest('Wrong parent id format')
         else:
             parent_comment = None
+        print parent_comment.date
         author = Profile.objects.get(user = request.user)
         comment = Comment.customManager.create_comment(text=text, author=author, parent=parent_comment, film=film)
         return HttpResponse(json.dumps({'text': 'Hello!', 'level': comment.level,
