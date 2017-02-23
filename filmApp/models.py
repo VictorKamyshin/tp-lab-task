@@ -14,8 +14,6 @@ class Profile(models.Model):
     patronymic = models.CharField(max_length=255, verbose_name=u'user patronymic', null=False)
     email = models.CharField(max_length=255, verbose_name=u'user email', null=False, unique=True)
     isModerator = models.BooleanField(default=False, verbose_name=u'This user has moderators rights')
-    avatar_url = models.CharField(max_length=255, verbose_name=u'avatar url', null=True, blank=True)
-    avatar = models.ImageField(upload_to='images', null=True, blank=True)
     activation_key = models.CharField(max_length=40, blank=True)
     key_expires = models.DateTimeField(default=datetime.now)
 
