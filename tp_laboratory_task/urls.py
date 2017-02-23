@@ -45,7 +45,4 @@ urlpatterns = [
 
     url(r'^api/film_list/.*$', views.api_film_list, name='api_film_list'),
     url(r'^api/film_card/.*$', views.api_film_card, name='api_film_card'),
-
-    url(r'^accounts/', include('registration.backends.hmac.urls')),
-
 ]
