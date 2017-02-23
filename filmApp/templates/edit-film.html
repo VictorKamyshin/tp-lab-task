@@ -1,9 +1,14 @@
 <!DOCTYPE html>
 {% extends "basis.html" %}
 {% block content %}
-	<p class="my-lead">Registration</p>
-<form action="{% url 'registration'%}" method="POST">
+		<p class="my-lead">Edit film information</p>
+<form action="{% url 'edit_film'%}" method="POST">
 {% csrf_token %}
+
+	{% for field in form.hidden_fields %}
+		<div style="display:none;">{{ field }}</div>
+	{% endfor %}
+
 {% for field in form.visible_fields %}
 	<div class="col-md-4">
 		<div>
@@ -22,6 +27,8 @@
     </div>
 	<div class="divider"> </div>
 {% endfor %}
-		<button type="submit" class="btn btn-lg btn-success btn-register">Register!</button>
-</form>
+<div class="col-md-4"></div>
+<div class=""col-md-8>
+		 	<button type="submit" class="btn btn-lg btn-success btn-register">Register!</button>
+</div>
 {% endblock %}

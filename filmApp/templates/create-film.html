@@ -2,7 +2,7 @@
 {% extends "basis.html" %}
 {% block content %}
 		<p class="my-lead">Edit film information</p>
-<form action="{% url 'create_edit_film'%}" method="POST">
+<form action="{% url 'create_film'%}" method="POST">
 {% csrf_token %}
 {% for field in form %}
 	<div class="col-md-4">

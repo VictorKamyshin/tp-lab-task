@@ -10,6 +10,15 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.10/ref/settings/
 """
 
+from .email_info import *
+
+#for gmail
+EMAIL_USE_TLS = EMAIL_USE_TLS
+EMAIL_HOST = EMAIL_HOST
+EMAIL_HOST_USER = EMAIL_HOST_USER
+EMAIL_HOST_PASSWORD = EMAIL_HOST_PASSWORD
+EMAIL_PORT = EMAIL_PORT
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 import os
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -51,6 +60,8 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'tp_laboratory_task.urls'
+
+ACCOUNT_ACTIVATION_DAYS = 7
 
 TEMPLATES = [
     {

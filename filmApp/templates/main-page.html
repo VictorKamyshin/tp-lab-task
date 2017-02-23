@@ -20,9 +20,11 @@
         </div>
     </div>
     <div class="col-md-8">
-        <a href="{% url 'create_edit_film'%}">
+        {% if isModerator %}
+        <a href="{% url 'create_film'%}">
             <button type="submit" class="btn btn-success add-film-button">+ Add film</button>
         </a>
+        {% endif %}
     </div> <!-- конец шапки столбца с фильмами-->
     {% for film in films %}
     <div class="col-sm-12 col-md-12"> <!--странная конструкция, но смотрится неплохо-->
@@ -44,6 +46,9 @@
             <div class = "col-sm-8 col-md-9 film-description">
                 <div>
                     <a href="{% url 'film_card'%}?film_id={{film.id}}"><h3>{{film.title}}</h3></a>
+                    {% if film.isDeleted %}
+                        <h3>DELETED</h3>
+                    {% endif %}
                 </div>
                 <div>
                     <h4>{{film.description}}</h4>

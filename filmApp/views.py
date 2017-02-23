@@ -1,38 +1,25 @@
-from django.shortcuts import render
-from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseBadRequest
+from django.shortcuts import render, get_object_or_404
+from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseForbidden
 from models import Film, Appraisal, Profile, Comment, User
 from django.db.models import Avg
 from datetime import datetime
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from forms import RegistrationForm, EditProfileForm, AuthorisationForm, CreateFilmForm, FilmCommentForm, FilmVoteForm
+from forms import RegistrationForm, EditProfileForm, AuthorisationForm, CreateFilmForm, FilmCommentForm, FilmVoteForm, \
+    EditFilmForm, EditFilmCommentForm
 from django.http import HttpResponseRedirect
 from django.contrib.auth import authenticate as dj_authenticate
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login as auth_login, logout
 import json
 from django.db.models import Count
+from django.core.exceptions import ObjectDoesNotExist
+import hashlib
+import datetime
+import random
+from django.utils import timezone
+from django.core.mail import send_mail
+from django.conf import settings
 # Create your views here.
-
-
-def test(request):
-    response = "all film appraisal cleared "
-    films = Film.objects.all()
-    for film in films:
-        rating = Appraisal.customManager.film_appraisal(film.id).aggregate(Avg('value'))
-        film.count_of_comments = Comment.customManager.filter(film=film).count()
-        if rating.get('value__avg') is None:
-            film.rating = 0
-        else:
-            film.rating = rating.get('value__avg')
-        print film.rating
-        film.save()
-    comments = Comment.customManager.all()
-    for comment in comments :
-        if comment.date is None:
-            comment.date = datetime.now()
-            print comment.text
-            comment.save()
-    return HttpResponse(response)
 
 
 def api_film_card(request):
@@ -40,7 +27,7 @@ def api_film_card(request):
         param = request.GET.get('film_id')
         try:
             film_id = int(param)
-        except:
+        except ValueError:
             return HttpResponseBadRequest("Id is not a number")
         film = Film.objects.get(id=film_id)
         appraisals = Appraisal.customManager.film_appraisal(film_id)
@@ -97,21 +84,48 @@ def main_page(request):
         if (sort is None) or (sort not in ['rating', 'popularity', 'date', 'title']):
             sort = 'title'
         films = []
-        if sort == 'rating':
-            films = list(Film.objects.all().order_by('rating'))
-        if sort == 'popularity':
-            films = list(Film.objects.all().order_by('count_of_comments'))
-        if sort == 'date':
-            films = list(Film.objects.all().order_by('date_of_addition'))
-        if sort == 'title':
-            films = list(Film.objects.all().order_by('title'))
+        is_moderator = check_is_moderator(request.user)
+        if is_moderator:
+            if sort == 'rating':
+                films = list(Film.objects.all().order_by('rating'))
+            if sort == 'popularity':
+                films = list(Film.objects.all().order_by('count_of_comments'))
+            if sort == 'date':
+                films = list(Film.objects.all().order_by('date_of_addition'))
+            if sort == 'title':
+                films = list(Film.objects.all().order_by('title'))
+        else:
+            if sort == 'rating':
+                films = list(Film.objects.filter(isDeleted=False).order_by('rating'))
+            if sort == 'popularity':
+                films = list(Film.objects.filter(isDeleted=False).order_by('count_of_comments'))
+            if sort == 'date':
+                films = list(Film.objects.filter(isDeleted=False).order_by('date_of_addition'))
+            if sort == 'title':
+                films = list(Film.objects.filter(isDeleted=False).order_by('title'))
         films = paginate(films, request)
         last_comments = Comment.customManager.get_last()
-        user = request.user.username
-        return render(request, 'main-page.html', {'films': films, 'last_comments': last_comments, 'username': user,
-                                                  'sort': sort})
+        username = request.user.username
+        return render(request, 'main-page.html', {'films': films, 'last_comments': last_comments, 'username': username,
+                                                  'sort': sort, 'isModerator': is_moderator})
     else:
         return HttpResponse('Method does not allowed')
+
+
+def profile_view_page(request):
+    if not request.method == 'GET':
+        return HttpResponseRedirect('/main/')
+    try:
+        profile = Profile.objects.get(user__username=request.GET.get('username'))
+    except ObjectDoesNotExist:
+        return HttpResponse('That user doesnt exist')
+    appraisal_distr = get_appraisal_distribution_by_user(profile.user)
+    last_comments = Comment.customManager.get_last()
+    username = request.user.username
+    can_edit = request.user.username == request.GET.get('username')
+    return render(request, 'profile-view.html', {'profile': profile, 'appraisals_distr': appraisal_distr,
+                                                 'last_comments': last_comments, 'username': username,
+                                                 'can_edit': can_edit})
 
 
 @login_required
@@ -124,14 +138,15 @@ def film_card_page(request):
     param = request.GET.get('film_id')
     try:
         film_id = int(param)
-    except:
+    except ValueError:
         return HttpResponse("Not a number")
     film_card = Film.objects.get(id=film_id)
     if film_card is None:
         return HttpResponse("There are no such film")
+    is_moderator = check_is_moderator(request.user)
+    if film_card.isDeleted and not is_moderator:
+        return HttpResponse("This film was deleted")
     comments = Comment.customManager.filter(film_id=film_card.id).order_by('material_path')
-    for comment in comments:
-        print comment.material_path
     user = request.user.username
     last_comments = Comment.customManager.get_last()
     appraisal_distr = get_appraisal_distr(film_id)
@@ -140,7 +155,30 @@ def film_card_page(request):
     return render(request, 'film-card.html', {'film_card': film_card, 'comments': comments,
                                               'last_comments': last_comments, 'comment_form': comment_form,
                                               'film_vote': film_vote_form, 'username': user,
-                                              'appraisals_distr': appraisal_distr})
+                                              'appraisals_distr': appraisal_distr, 'isModerator': is_moderator})
+
+
+def register_confirm(request):
+    if request.user.is_authenticated():
+        HttpResponseRedirect('/main_page/')
+    if request.method == 'GET':
+        activation_key = request.GET.get('activation_key')
+    else:
+        return HttpResponseBadRequest('Method not supported')
+
+    user_profile = get_object_or_404(Profile, activation_key=activation_key)
+
+    if user_profile.key_expires < timezone.now():
+        user_profile.delete()
+        request.user.delete()
+        last_comments = Comment.customManager.get_last()
+        return render(request, 'confirm_expired.html', {'last_comments': last_comments})
+    else:
+        last_comments = Comment.customManager.get_last()
+        user = user_profile.user
+        user.is_active = True
+        user.save()
+        return render(request, 'registration_confirm.html', {'last_comments': last_comments})
 
 
 def registration_page(request):
@@ -155,40 +193,77 @@ def registration_page(request):
             password = form.cleaned_data.get('password1')
             avatar = form.cleaned_data.get('avatar')
             user = User.objects.create_user(username=username, email=email, password=password)
+            user.is_active = False
+            user.save()
+
+            salt = hashlib.sha1(str(random.random())).hexdigest()[:5]
+            activation_key = hashlib.sha1(salt + email).hexdigest()
+            key_expires = datetime.datetime.today() + datetime.timedelta(2)
             Profile.objects.create(user=user, email=email, name=name, surname=surname, patronymic=patronymic,
-                                   avatar=avatar)
-            return HttpResponseRedirect('/main/')
+                                   avatar=avatar, activation_key=activation_key, key_expires=key_expires)
+
+            email_subject = u'Registration confirm'
+            email_body = u"Hey %s, thanks for signing up. To activate your account, click this link within \
+            48hours http://127.0.0.1:8000/registration_confirm/?activation_key=%s" % (username, activation_key)
+            send_mail(email_subject, email_body, settings.EMAIL_HOST_USER, [email], fail_silently=False)
+            last_comments = Comment.customManager.get_last()
+            return render(request, 'registration_success.html', {'last_comments': last_comments})
+        else:
+            return HttpResponse('Form was invalid')
     else:
         form = RegistrationForm
         user = request.user.username
+        last_comments = Comment.customManager.get_last()
+        return render(request, 'registration.html', {'last_comments': last_comments, 'form': form, 'username': user})
+
+
+def profile_edit_page(request):
+    if request.method == 'POST':
+        new_username = request.POST.get('username', '')
+        new_name = request.POST.get('name', '')
+        new_surname = request.POST.get('surname', '')
+        new_patronymic = request.POST.get('patronymic', '')
+        profile = Profile.objects.get(user=request.user)
+        if new_username:
+            profile.user.username = new_username
+        if new_name:
+            profile.name = new_name
+        if new_surname:
+            profile.surname = new_surname
+        if new_patronymic:
+            profile.patronymic = new_patronymic
+        profile.save()
     last_comments = Comment.customManager.get_last()
-    return render(request, 'registration.html', {'last_comments': last_comments, 'form': form, 'username': user})
-
-
-def profile_page(request):
-    last_comments = generate_last_comments()
     form = EditProfileForm
     user = request.user.username
-    return render(request, 'profile.html', {'last_comments':last_comments,'form':form,'username':user})
+    appraisal_distr = get_appraisal_distribution_by_user(request.user)
+    return render(request, 'profile.html', {'last_comments': last_comments, 'form': form, 'username': user,
+                                            'appraisals_distr': appraisal_distr})
 
 
 def authorisation_page(request):
     if request.method == 'POST':
         form = AuthorisationForm(request.POST)
         if form.is_valid():
-            username = request.POST.get('username', '')
+            email = request.POST.get('email', '')
+            try:
+                username = Profile.objects.get(email=email).user.username
+            except ObjectDoesNotExist:
+                return HttpResponseBadRequest('This user does not exists')
             password = request.POST.get('password', '')
-            user = dj_authenticate(username = username, password = password)
+            user = dj_authenticate(username=username, password=password)
             if user:
                 auth_login(request, user)
                 return HttpResponseRedirect('/main/')
     else:
         form = AuthorisationForm
-    last_comments = generate_last_comments()
-    return render(request, 'authorisation.html', {'last_comments': last_comments, 'form':form})
+    last_comments = Comment.customManager.get_last()
+    return render(request, 'authorisation.html', {'last_comments': last_comments, 'form': form})
 
 
-def create_edit_film(request):
+def create_film(request):
+    if not (check_user_rights(request.user)):
+        return HttpResponseRedirect('/main/')
     if request.method == 'POST':
         form = CreateFilmForm(request.POST)
         if form.is_valid():
@@ -197,14 +272,134 @@ def create_edit_film(request):
             country = request.POST.get('country', '')
             description = request.POST.get('description', '')
             premiere = request.POST.get('premiere', '')
-            film = Film.objects.create(title=title, producer=producer, country=country, description=description,
-                                       premiere=premiere)
+            Film.objects.create(title=title, producer=producer, country=country, description=description,
+                                premiere=premiere)
             return HttpResponseRedirect('/main/')
     else:
         form = CreateFilmForm
     last_comments = Comment.customManager.get_last()
     user = request.user.username
-    return render(request, 'create-edit-film.html', {'last_comments':last_comments,'form':form,'username':user})
+    return render(request, 'create-film.html', {'last_comments': last_comments, 'form': form, 'username': user})
+
+
+def edit_film(request):
+    if not (check_user_rights(request.user)):
+        return HttpResponseRedirect('/main/')
+
+    if request.method == 'GET':
+        form = EditFilmForm(initial={'film_id': request.GET.get('film_id')})
+        last_comments = Comment.customManager.get_last()
+        return render(request, 'edit-film.html', {'form': form, 'username': request.user.username,
+                                                  'last_comments': last_comments})
+
+    if request.method == 'POST':
+        film_id = request.POST.get('film_id')
+        try:
+            film = Film.objects.get(id=film_id)
+        except ObjectDoesNotExist:
+            return HttpResponseBadRequest('There are no such film')
+        producer = request.POST.get('producer', '')
+        country = request.POST.get('country', '')
+        description = request.POST.get('description', '')
+        premiere = request.POST.get('premiere', None)
+        if producer:
+            film.producer = producer
+        if country:
+            film.country = country
+        if description:
+            film.description = description
+        if premiere:
+            film.premiere = premiere
+        film.save()
+        return HttpResponseRedirect('/film_card/?film_id='+str(film.id))
+
+
+def delete_film(request):
+    if check_is_moderator(request.user):
+        if request.method == 'GET':
+            try:
+                film = Film.objects.get(id=request.GET.get('film_id'))
+            except ObjectDoesNotExist:
+                return HttpResponseBadRequest('There are no such film')
+            film.isDeleted = True
+            film.save()
+            return HttpResponseRedirect('/film_card/?film_id='+str(film.id))
+        else:
+            return HttpResponseBadRequest('Method not supported')
+    else:
+        return HttpResponse('You are not moderator')
+
+
+def restore_film(request):
+    if check_is_moderator(request.user):
+        if request.method == 'GET':
+            try:
+                film = Film.objects.get(id=request.GET.get('film_id'))
+            except ObjectDoesNotExist:
+                return HttpResponseBadRequest('There are no such film')
+            film.isDeleted = False
+            film.save()
+            return HttpResponseRedirect('/film_card/?film_id='+str(film.id))
+        else:
+            return HttpResponseBadRequest('Method not supported')
+    else:
+        return HttpResponse('You are not moderator')
+
+
+def edit_comment(request):
+    if not check_is_moderator(request.user):
+        return HttpResponseBadRequest('You are not moderator')
+    if request.method == 'GET':
+        comment_id = request.GET.get('comment_id')
+        comment = Comment.customManager.get(id=comment_id)
+        form = EditFilmCommentForm(initial={'comment_id': comment_id})
+        last_comments = Comment.customManager.get_last()
+        return render(request, 'comment_edit.html', {'comment': comment, 'form': form,
+                                                     'username': request.user.username, 'last_comments': last_comments})
+    if request.method == 'POST':
+        comment_id = request.POST.get('comment_id')
+        try:
+            comment = Comment.customManager.get(id=comment_id)
+        except ObjectDoesNotExist:
+            return HttpResponseBadRequest('There are no such comment')
+        text = request.POST.get('new_text', '')
+        comment.text = text
+        comment.save()
+        return HttpResponseRedirect('/film_card/?film_id='+str(comment.film.id))
+
+    return HttpResponse('I see you request, but wouldnt anything right now')
+
+
+def delete_comment(request):
+    if not check_is_moderator(request.user):
+        return HttpResponseBadRequest('You are not moderator')
+    if request.method == 'GET':
+        comment_id = request.GET.get('comment_id')
+        try:
+            comment = Comment.customManager.get(id=comment_id)
+        except ObjectDoesNotExist:
+            return HttpResponseBadRequest('There are no such comment')
+        comment.isDeleted = True
+        comment.save()
+        return HttpResponseRedirect('/film_card/?film_id='+str(comment.film.id))
+    else:
+        return HttpResponseBadRequest('Method not supported')
+
+
+def restore_comment(request):
+    if not check_is_moderator(request.user):
+        return HttpResponseBadRequest('You are not moderator')
+    if request.method == 'GET':
+        comment_id = request.GET.get('comment_id')
+        try:
+            comment = Comment.customManager.get(id=comment_id)
+        except ObjectDoesNotExist:
+            return HttpResponseBadRequest('There are no such comment')
+        comment.isDeleted = False
+        comment.save()
+        return HttpResponseRedirect('/film_card/?film_id=' + str(comment.film.id))
+    else:
+        return HttpResponseBadRequest('Method not supported')
 
 
 def film_card_appraisal(request):
@@ -215,45 +410,47 @@ def film_card_appraisal(request):
         film = Film.objects.get(id=film_id)
         try:
             appraisal = Appraisal.customManager.get(author__user=user, film__id=film_id)
-            print appraisal.value
             appraisal.value = value
             appraisal.save()
-        except:
-            print 'Appraisal didnt exist'
-            author = Profile.objects.get(user = user)
-            Appraisal.customManager.create(value = value, author = author, film = film)
-
+        except ObjectDoesNotExist:
+            author = Profile.objects.get(user=user)
+            Appraisal.customManager.create(value=value, author=author, film=film)
         rating = Appraisal.customManager.film_appraisal(film_id).aggregate(Avg('value'))
         film.rating = rating.get('value__avg')
         film.save()
-        return HttpResponse(json.dumps({'text':'Got your appraisal', 'rating': film.rating}), content_type='application/json')
+        return HttpResponse(json.dumps({'text': 'Got your appraisal', 'rating': film.rating}),
+                            content_type='application/json')
     return HttpResponseBadRequest('Method not supported')
 
 
 def film_comment(request):
-    if request.method == 'POST':
-        film_id = request.POST.get('film_id')
-        comment_id = request.POST.get('commented_comment_id')
-        print comment_id
-        print film_id
-        text = request.POST.get('text')
-        film = Film.objects.get(id=film_id)
-        print type(comment_id)
-        if comment_id is not None:
-            if comment_id.isdigit():
-                parent_comment = Comment.customManager.get(id=comment_id)
-            else:
-                return HttpResponseBadRequest('Wrong parent id format')
-        else:
-            parent_comment = None
-        print parent_comment.date
-        author = Profile.objects.get(user = request.user)
-        comment = Comment.customManager.create_comment(text=text, author=author, parent=parent_comment, film=film)
-        return HttpResponse(json.dumps({'text': 'Hello!', 'level': comment.level,
-                                        'reverse_level': 12 - comment.level, 'comment_id': comment.id,
-                                        'username':request.user.username}), content_type='application/json')
+    if not request.user.is_authenticated:
+        return HttpResponseForbidden('Authorization requered')
     else:
-        return HttpResponseBadRequest('Unsupported request method')
+        if request.method == 'POST':
+            film_id = request.POST.get('film_id')
+            comment_id = request.POST.get('commented_comment_id')
+            text = request.POST.get('text')
+            film = Film.objects.get(id=film_id)
+            if comment_id is not None:
+                if comment_id.isdigit():
+                    parent_comment = Comment.customManager.get(id=comment_id)
+                else:
+                    parent_comment = None
+            else:
+                parent_comment = None
+            author = Profile.objects.get(user=request.user)
+            comment = Comment.customManager.create_comment(text=text, author=author, parent=parent_comment, film=film)
+            print film.count_of_comments
+            previous_comments = list(Comment.customManager.filter(material_path__lt=comment.material_path,
+                                                                  film__id=film.id))
+            previous_comment = previous_comments[-1]
+            return HttpResponse(json.dumps({'text': 'Hello!', 'level': comment.level,
+                                            'reverse_level': 12 - comment.level, 'comment_id': comment.id,
+                                            'username': request.user.username, 'prev_comment_id': previous_comment.id}),
+                                content_type='application/json')
+        else:
+            return HttpResponseBadRequest('Unsupported request method')
 
 
 def get_appraisal_distr(film_id):
@@ -261,47 +458,48 @@ def get_appraisal_distr(film_id):
         .annotate(value_count=Count('value'))
     appraisal_distr = []
     j = 0
-    for i in xrange(0,11):
+    for i in xrange(0, 11):
         if j < len(existing_appraisal_distr):
             if existing_appraisal_distr[j].get('value') == i:
-                appraisal_distr.append({'value':i,'count':existing_appraisal_distr[j].get('value_count')})
-                j+=1
+                appraisal_distr.append({'value': i, 'count': existing_appraisal_distr[j].get('value_count')})
+                j += 1
             else:
-                appraisal_distr.append({'value':i,'count':0})
+                appraisal_distr.append({'value': i, 'count': 0})
         else:
-            appraisal_distr.append({'value':i,'count':0})
+            appraisal_distr.append({'value': i, 'count': 0})
     return appraisal_distr
 
 
-def generate_last_comments():
-    comments = []
-    for i in xrange(0,4):
-        comments.append({'film_title':u'Commented film title' + str(i),'text_part':u'Part of comment...'})
-    return comments
+def get_appraisal_distribution_by_user(user):
+    existing_appraisal_distr = Appraisal.customManager.filter(author__user=user, film__isDeleted=False).values('value')\
+        .annotate(value_count=Count('value'))
+    appraisal_distr = []
+    j = 0
+    for i in xrange(0, 11):
+        if j < len(existing_appraisal_distr):
+            if existing_appraisal_distr[j].get('value') == i:
+                appraisal_distr.append({'value': i, 'count': existing_appraisal_distr[j].get('value_count')})
+                j += 1
+            else:
+                appraisal_distr.append({'value': i, 'count': 0})
+        else:
+            appraisal_distr.append({'value': i, 'count': 0})
+    return appraisal_distr
 
 
-def generate_comment(count):
-    comments = []
-    for i in xrange(0, count):
-        comments.append({'username':u'username' + str(i),
-                         'text':u'Lorem ipsum dolor sit amet , consectetur adipiscing elit. Ut posuere quam eget arcu '
-                                u'venenatis, in suscipit neque finibus. Nulla facilisi. Aenean et nisl vitae lectus '
-                                u'ultrices placerat. Praesent eu auctor ligula. Praesent posuere nec nunc at rutrum. '
-                                u'Suspendisse potenti. Morbi eu elementum dui. Phasellus aliquet euismod libero vitae '
-                                u'vestibulum. Nunc et maximus est. Nulla facilisi.', 'level':i, 'reverse_level': 12 - i})
-    return comments
+def check_user_rights(user):
+    profile = Profile.objects.get(user=user)
+    if profile.isModerator:
+        return True
+    else:
+        return False
 
 
-def generate_films(count):
-    films = []
-    for i in xrange(0, count ):
-        films.append({'rating': 5+i, 'count_of_comments': 2+i, 'title': u'AWESOME FILM ' + str(i),
-                      'description':u'Lorem ipsum dolor sit amet , consectetur adipiscing elit. Ut posuere quam eget '
-                                    u'arcu venenatis, in suscipit neque finibus. Nulla facilisi. Aenean et nisl vitae '
-                                    u'lectus ultrices placerat. Praesent eu auctor ligula. Praesent posuere nec nunc at '
-                                    u'rutrum. Suspendisse potenti. Morbi eu elementum dui. Phasellus aliquet euismod '
-                                    u'libero vitae vestibulum. Nunc et maximus est. Nulla facilisi. ' + str(i)})
-    return films
+def check_is_moderator(user):
+    if user.is_authenticated():
+        return Profile.objects.get(user=user).isModerator
+    else:
+        return False
 
 
 def paginate(object_list, request):

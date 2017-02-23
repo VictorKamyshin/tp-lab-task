@@ -32,9 +32,25 @@
 		<div class="col-md-9">
 		<h2 class="my-lead">{{film_card.title}}  </h2>
 		</div>
-		<div class = "col-md-1 edit-film-button-wrapper"><button class="btn btn-info">edit card</button></div>
+        {% if isModerator %}
+		<div class = "col-md-1 edit-film-button-wrapper">
+            <a href="{% url 'edit_film'%}?film_id={{film_card.id}}">
+                <button class="btn btn-info">edit card</button>
+            </a>
+        </div>
 		<div class = "cil-md-1"></div>
-		<div class = "col-md-1"><button class="btn btn-danger">delete card</button></div>
+        <div class = "col-md-1">
+            {% if film_card.isDeleted  %}
+            <a href="{% url 'restore_film' %}?film_id={{film_card.id}}">
+                <button class="btn btn-success">restore card</button>
+            </a>
+            {% else %}
+            <a href="{% url 'delete_film' %}?film_id={{film_card.id}}">
+                <button class="btn btn-danger">delete card</button>
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
 		<div>
 			<div class="col-md-5">
 				<img src="http://lorempixel.com/300/400/">
@@ -78,9 +94,11 @@
                </form>
             </div>
 
+            {% if username %}
             <button type="submit" class="btn btn-lg btn-success answer_comment_button" name="film_root_comment_add">
                 Comment!
             </button>
+            {% endif %}
         </div>
 
 		<div class="divider"> </div>
@@ -98,14 +116,25 @@
                 </div>
                 <div class = "col-sm-9 col-md-10">
                     <div>
-                        <h3 class="comment_author_field"></h3>
+                        <a class="link-to-the-author-profile" href="{% url 'profile_view' %}?username=">
+                            <h3 class="comment_author_field"></h3>
+                        </a>
                     </div>
                     <div>
                         <h4 class="comment_text_field"></h4>
                     </div>
 					<div class="button-group">
-						<button class="answer_comment_button" data-comment_id="">Answer!</button>
-						<button>Edit</button>
+                        {% if username %}
+						    <button class="answer_comment_button" data-comment_id="">Answer!</button>
+                        {% endif %}
+                        {% if isModerator %}
+                            <a class="edit-comment" href="{% url 'edit_comment' %}?comment_id=">
+                                <button>Edit</button>
+                            </a>
+                        <a class="delete-comment" href="{% url 'delete_comment' %}?comment_id=">
+                            <button>Delete!</button>
+                        </a>
+                        {% endif %}
 					</div>
                 </div>
             </div>
@@ -124,14 +153,35 @@
                 </div> 
                 <div class = "col-sm-9 col-md-10">
                     <div>
-                        <h3>{{comment.author.user.username}}</h3>
+                        <a href="{% url 'profile_view' %}?username={{comment.author.user.username}}">
+                            <h3>{{comment.author.user.username}}</h3>
+                        </a>
                     </div>
                     <div>
+                        {% if comment.isDeleted %}
+                        <h4> Deleted! </h4>
+                        {% else %}
                         <h4>{{comment.text}}</h4>
+                        {% endif %}
                     </div>
 					<div class="button-group">
-						<button class="answer_comment_button" data-comment_id="{{comment.id}}">Answer!</button>
-						<button>Edit</button>
+                        {% if username %}
+						    <button class="answer_comment_button" data-comment_id="{{comment.id}}">Answer!</button>
+                        {% endif %}
+                        {% if isModerator %}
+                            <a class="edit-comment" href="{% url 'edit_comment' %}?comment_id={{comment.id}}">
+                                <button>Edit</button>
+                            </a>
+                            {% if comment.isDeleted%}
+                            <a class="restore-comment" href="{% url 'restore_comment' %}?comment_id={{comment.id}}">
+                                <button>Restore!</button>
+                            </a>
+                            {% else %}
+                            <a class="delete-comment" href="{% url 'delete_comment' %}?comment_id={{comment.id}}">
+                                <button>Delete!</button>
+                            </a>
+                            {% endif %}
+                        {% endif %}
 					</div>
                 </div>
             </div>
@@ -143,6 +193,6 @@
 
 {% block scripts %}
     {% load staticfiles %}
-    <script type="text/javascript" src="{% static "js/answer_form_show_hide.js" %}"></script>
+    <script type="text/javascript" src="{% static "js/comments.js" %}"></script>
     <script type="text/javascript" src="{% static "js/film_appraisal.js" %}"></script>
 {% endblock %}

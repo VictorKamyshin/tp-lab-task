@@ -1,6 +1,9 @@
 {% extends "basis.html" %}
 {% block content %}
-	<p class="my-lead">Registration</p>
+	<p class="my-lead">{{user.username}}</p>
+    <h3>Tip: if you don't want to change field - leave it blank</h3>
+<form action="{% url 'profile' %}" method="post">
+	{%csrf_token%}
 {% for field in form %}
 	<div class="col-md-4">
 		<div>
@@ -17,7 +20,9 @@
             <label>{{field.errors}}</label>
         </div>
     </div>
+
 	<div class="divider"> </div>
 {% endfor %}
 		<button type="submit" class="btn btn-lg btn-success btn-register">Edit!</button>
+</form>
 {% endblock %}<!DOCTYPE html>

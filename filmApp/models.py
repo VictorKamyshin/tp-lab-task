@@ -1,6 +1,5 @@
 from __future__ import unicode_literals
-from django.db import models
-from django.contrib.auth.models import User, UserManager
+from django.contrib.auth.models import User
 from datetime import datetime
 from django.db.models import Count
 from django.db import models
@@ -10,22 +9,25 @@ max_depth = 5
 
 class Profile(models.Model):
     user = models.OneToOneField(User, verbose_name=u'User', related_name='users_profile')
-    name = models.CharField(max_length=255, verbose_name=u'user name',null=False)
+    name = models.CharField(max_length=255, verbose_name=u'user name', null=False)
     surname = models.CharField(max_length=255, verbose_name=u'user surname', null=False)
-    patronymic = models.CharField(max_length=255, verbose_name=u'user patronymic',null=False)
+    patronymic = models.CharField(max_length=255, verbose_name=u'user patronymic', null=False)
     email = models.CharField(max_length=255, verbose_name=u'user email', null=False, unique=True)
+    isModerator = models.BooleanField(default=False, verbose_name=u'This user has moderators rights')
     avatar_url = models.CharField(max_length=255, verbose_name=u'avatar url', null=True, blank=True)
     avatar = models.ImageField(upload_to='images', null=True, blank=True)
+    activation_key = models.CharField(max_length=40, blank=True)
+    key_expires = models.DateTimeField(default=datetime.now)
 
 
 class Film(models.Model):
     title = models.CharField(max_length=255, verbose_name=u'film title', null=False,
                              unique=True)
-    country = models.CharField(max_length=255, default=u'USA', verbose_name=u'Country', null = False)
+    country = models.CharField(max_length=255, default=u'USA', verbose_name=u'Country', null=False)
     producer = models.CharField(max_length=255, default='N/a', verbose_name=u'Producer', null=False)
     description = models.CharField(max_length=4096, verbose_name=u'film description', null=True)
     premiere = models.DateField(default=datetime.now, verbose_name=u'film premier date')
-    rating = models.FloatField(default = 0, verbose_name=u'film rating')
+    rating = models.FloatField(default=0, verbose_name=u'film rating')
     count_of_appraisal = models.IntegerField(default=0, verbose_name=u'film count of appraisal')
     date_of_addition = models.DateField(default=datetime.now, verbose_name=u'film date of addition')
     isDeleted = models.BooleanField(default=False, verbose_name=u'film is deleted')
@@ -33,8 +35,9 @@ class Film(models.Model):
     count_of_comments = models.IntegerField(default=0, verbose_name=u'count of comments')
 
     def json_format(self):
-        return {'title': self.title,'country': self.country,'producer':self.producer,'description':self.description,
-                'premiere':str(self.premiere), 'rating':self.rating,'date_of_addition':str(self.date_of_addition)}
+        return {'title': self.title, 'country': self.country, 'producer': self.producer,
+                'description': self.description, 'premiere': str(self.premiere), 'rating': self.rating,
+                'date_of_addition': str(self.date_of_addition)}
 
 
 class AppraisalManager(models.Manager):
@@ -50,19 +53,17 @@ class AppraisalManager(models.Manager):
     def user_appraisal_distribution(self, user_id):
         return self.filter(author__id=user_id).values('value').annotate(value_count=Count('value'))
 
-   # def get_by_film_id_and_user(self, user):
-
 
 class Appraisal(models.Model):
     value = models.IntegerField(null=False, verbose_name=u'appraisal value')
-    author = models.ForeignKey(Profile,on_delete=models.CASCADE, verbose_name=u'appraisal author',
+    author = models.ForeignKey(Profile, on_delete=models.CASCADE, verbose_name=u'appraisal author',
                                related_name=u'appraisal_author', null=False)
-    film = models.ForeignKey(Film,on_delete=models.CASCADE, verbose_name=u'appraisal film',
+    film = models.ForeignKey(Film, on_delete=models.CASCADE, verbose_name=u'appraisal film',
                              related_name=u'appraisal_film', null=False)
     customManager = AppraisalManager()
 
     def json_format(self):
-        return {'value':self.value, 'author':self.author.name}
+        return {'value': self.value, 'author': self.author.name}
 
 
 class CommentManager(models.Manager):
@@ -74,10 +75,11 @@ class CommentManager(models.Manager):
             list_path = list('a'*max_depth)
             list_path[0] = chr(ord(list_path[0])+film.count_of_root_comments)
             path = ''.join(list_path)
-            comment = self.create(author=author,film=film,text=text,material_path=path)
+            comment = self.create(author=author, film=film, text=text, material_path=path)
             return comment
         else:
             film.count_of_comments += 1
+            film.save()
             parent.count_of_childs += 1
             parent.save()
             list_path = list(parent.material_path)
@@ -94,7 +96,7 @@ class CommentManager(models.Manager):
             return comment
 
     def get_last(self):
-        comment_list = self.all().order_by('-date')[:4]
+        comment_list = self.filter(isDeleted=False).order_by('-date')[:4]
         parts_of_comments = []
         for comment in comment_list:
             parts_of_comments.append({'film_title': comment.film.title, 'film_id': comment.film.id,
@@ -103,16 +105,16 @@ class CommentManager(models.Manager):
 
 
 class Comment(models.Model):
-    author = models.ForeignKey(Profile, on_delete=models.CASCADE, verbose_name =u'comment author',
-                               related_name=u'comment_author', null = False)
+    author = models.ForeignKey(Profile, on_delete=models.CASCADE, verbose_name=u'comment author',
+                               related_name=u'comment_author', null=False)
     film = models.ForeignKey(Film, on_delete=models.CASCADE, verbose_name=u'comment film', related_name=u'comment_film',
                              null=False)
     text = models.CharField(max_length=1024, verbose_name=u'comment text', null=True)
-    material_path = models.CharField(max_length=10, default='a'*max_depth, verbose_name=u'material path', null = False)
+    material_path = models.CharField(max_length=10, default='a'*max_depth, verbose_name=u'material path', null=False)
     count_of_childs = models.IntegerField(default=0, verbose_name=u'count of childs')
     isDeleted = models.BooleanField(default=False)
     level = models.IntegerField(default=0, verbose_name=u'level of depth of comment')
-    reverse_level = models.IntegerField(default = 12, verbose_name=u'value contrary to the level')
+    reverse_level = models.IntegerField(default=12, verbose_name=u'value contrary to the level')
     date = models.DateTimeField(default=datetime.now, verbose_name=u'time of comment')
 
     customManager = CommentManager()

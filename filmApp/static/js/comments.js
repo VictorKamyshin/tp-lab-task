@@ -2,7 +2,6 @@ $('.answer_comment_button').click(answer);
 
 function answer() { //огромная такая джава-скриптовина
         var comment_id = $(this).data('comment_id');
-        console.log("форму ввода комментария надо добавить к коменту "+comment_id)
         var parent_elem;
         if(!comment_id){
             var btn = document.getElementsByName('film_root_comment_add')[0]
@@ -27,8 +26,6 @@ function answer() { //огромная такая джава-скриптови�
         form_clone.querySelector(".comment-submit-button").setAttribute("data-comment_id",comment_id)
         form_clone.querySelector(".comment-submit-button").addEventListener("click", send_comment );
             //она должна висеть в обработчике формы для комментария к самому фильму
-        console.log(parent_elem[0]);
-        console.log(form_clone);
         parent_elem[0].appendChild(form_clone);
         return false;
 }
@@ -38,8 +35,6 @@ function send_comment() {
             $data = $form.find('textarea[name=text]').val(); //омайгадебл, мы добрались до данных формы
             var film_id = $(this).data('film_id');
             var comment_id = $(this).data('comment_id');
-            console.log("Айдишник коммента, который мы пытаемся комментироваь")
-            console.log(comment_id); //выглядит стремно, но я верю в связывание, контекст и прочие умные слова
             $.ajax({
                 url: '/film_comment/',
                 method: 'post',
@@ -55,16 +50,26 @@ function send_comment() {
                 var comment_clone = phantom_of_comment.cloneNode(true);
                 comment_clone.style.display="block";
                 var comment_container = document.getElementsByName('comments_block')[0];
-                console.log(comment_container);
                 comment_clone.querySelector(".thumbnail").setAttribute("name", "comment-box-"+resp.comment_id);
                 comment_clone.querySelector(".answer_comment_button").setAttribute("data-comment_id", resp.comment_id);
                 comment_clone.querySelector(".comment-margin").className =("col-md-"+resp.level);
                 comment_clone.querySelector(".comment-block").className = ("col-md-"+resp.reverse_level);
+                console.log(comment_clone.querySelector(".link-to-the-author-profile").getAttribute("href"))
+                comment_clone.querySelector(".link-to-the-author-profile").setAttribute("href",
+                    comment_clone.querySelector(".link-to-the-author-profile").getAttribute("href")+resp.username)
+
+                comment_clone.querySelector(".edit-comment").setAttribute("href",
+                    comment_clone.querySelector(".edit-comment").getAttribute("href")+resp.comment_id)
+
+                delete_comment = comment_clone.querySelector(".delete-comment")
+                if(delete_comment){
+                    delete_comment.setAttribute("href", delete_comment.getAttribute("href")+resp.comment_id)
+                }
+
                 comment_clone.querySelector(".comment_author_field").innerHTML = resp.username;
                 comment_clone.querySelector(".comment_text_field").innerHTML = $data;
                 comment_clone.querySelector(".answer_comment_button").addEventListener("click", answer );
-                var previous_comment = (document.getElementsByName("comment-box-"+comment_id)[0]);
-                console.log(previous_comment);
+                var previous_comment = (document.getElementsByName("comment-box-"+resp.prev_comment_id)[0]);
                 if(previous_comment != undefined){
                     previous_comment = previous_comment.parentNode;
                     insertAfter(comment_clone,previous_comment);
@@ -75,7 +80,6 @@ function send_comment() {
             });
 
         var previous_form = document.getElementsByName('form_clone')
-        console.log("Попытались получить уже существующую форму");
         if(previous_form.length!=0){
             previous_form = previous_form[0]
             var previous_form_parent_elem = document.getElementsByName(previous_form.getAttribute('parent_elem_name'))[0]

@@ -6,9 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>main page</title>
     {% load staticfiles %}
-    <link href="{% static "css/bootstrap.min.css" %}" rel="stylesheet">
+    <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">
     {% load staticfiles %}
-    <link href="{% static "css/MyCss.css" %}" rel="stylesheet">
+    <link href="{% static 'css/MyCss.css' %}" rel="stylesheet">
     {% block head_historgram %} {% endblock %}
 </head>
 <body>
@@ -20,19 +20,19 @@
             <div id="navbar" class="navbar-collapse collapse">
                 {% if username %}
                     <span class="navbar-brand navbar-right">Welcome, {{username}} </span>
-                    <form class="navbar-form navbar-right" action = "{% url 'user_logout' %}" >
+                    <a class="navbar-form navbar-right" href = "{% url 'user_logout' %}" >
                         <button type="submit" class="btn btn-danger">Log out</button>
-                    </form>
-                    <form class="navbar-form navbar-right" action = "{% url 'profile' %}" >
+                    </a>
+                    <a class="navbar-form navbar-right" href = "{% url 'profile_view' %}?username={{username}}" >
                         <button type="submit" class="btn btn-info">Profile</button>
-                    </form>
+                    </a>
                 {% else %}
-                  <form class="navbar-form navbar-right" action = "{% url 'authorisation' %}" >
+                  <a class="navbar-form navbar-right" href = "{% url 'authorisation' %}" >
                       <button type="submit" class="btn btn-success">Log in</button>
-                  </form>
-                  <form class="navbar-form navbar-right"  action = "{% url 'registration' %}" >
+                  </a>
+                  <a class="navbar-form navbar-right" href = "{% url 'registration' %}" >
                       <button type="submit" class="btn btn-info">Registration</button>
-                  </form>
+                  </a>
                 {%endif%}
             </div>
         </div>
@@ -63,9 +63,9 @@
     <!-- Bootstrap core JavaScript
     ================================================== -->
     {% load staticfiles %}
-    <script src="{% static "js/jquery.min.js" %}"></script>
+    <script src="{% static 'js/jquery.min.js' %}"></script>
     {% load staticfiles %}
-    <script src="{% static "js/bootstrap.min.js" %}"></script>
+    <script src="{% static 'js/bootstrap.min.js' %}"></script>
 
 {% block scripts %}
 {% endblock %}
